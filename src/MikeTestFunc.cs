@@ -18,7 +18,8 @@ namespace LocalFunctionProj
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
-            return new OkObjectResult("Welcome to Azure Functions 2!");
+            _logger.LogWarning("A warning! Oh no! Foobar!");
+            return new OkObjectResult("Welcome to Azure Functions 3!");
         }
     }
 }
