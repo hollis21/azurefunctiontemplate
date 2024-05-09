@@ -54,6 +54,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   properties: {
     supportsHttpsTrafficOnly: true
     defaultToOAuthAuthentication: true
+    allowSharedKeyAccess: false
   }
 }
 
@@ -84,8 +85,8 @@ resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
       netFrameworkVersion: 'v8.0'
       appSettings: [
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+          name: 'AzureWebJobsStorage__accountname'
+          value: storageAccount.name
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -130,5 +131,20 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: {
     Application_Type: 'web'
     Request_Source: 'rest'
+  }
+}
+
+resource StorageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+  scope: storageAccount
+}
+
+resource storageBlobDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(subscription().id, functionApp.id, StorageBlobDataOwnerRole.id)
+  properties: {
+    principalId: functionApp.identity.principalId
+    roleDefinitionId: StorageBlobDataOwnerRole.id
+    principalType: 'ServicePrincipal'
   }
 }
